@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bashio
+#!/usr/bin/env bashio
 # shellcheck shell=bash
 set -euo pipefail
 
@@ -18,7 +18,7 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=info
 
-bashio::log.info "Starting Datadog Agent (v0.8.0)..."
+bashio::log.info "Starting Datadog Agent (v0.8.1)..."
 
 # Create datadog.yaml
 cat > /etc/datadog-agent/datadog.yaml <<EOF
