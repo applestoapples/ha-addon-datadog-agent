@@ -1,13 +1,14 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bashio
+# shellcheck shell=bash
 set -euo pipefail
 
 # Read add-on options
-DD_API_KEY="$(jq -r '.dd_api_key' /data/options.json)"
-DD_SITE="$(jq -r '.dd_site' /data/options.json)"
-DD_HOSTNAME="$(jq -r '.dd_hostname' /data/options.json)"
+DD_API_KEY=$(bashio::config 'dd_api_key')
+DD_SITE=$(bashio::config 'dd_site')
+DD_HOSTNAME=$(bashio::config 'dd_hostname')
 
 if [ -z "$DD_API_KEY" ]; then
-  echo "ERROR: dd_api_key is required" >&2
+  bashio::log.error "dd_api_key is required"
   exit 1
 fi
 
@@ -15,15 +16,17 @@ export DD_API_KEY
 export DD_SITE
 export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
-export DD_LOG_LEVEL=debug
+export DD_LOG_LEVEL=info
 
-# Create minimal datadog.yaml
+bashio::log.info "Starting Datadog Agent (v0.9.0)..."
+
+# Create datadog.yaml
 cat > /etc/datadog-agent/datadog.yaml <<EOF
 api_key: ${DD_API_KEY}
 site: ${DD_SITE}
 hostname: ${DD_HOSTNAME}
 logs_enabled: true
-log_level: debug
+log_level: info
 EOF
 
 # Configure journald log collection
