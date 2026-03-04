@@ -33,5 +33,5 @@ logs:
       - datadog-agent.service
 EOF
 
-# Start the agent
-exec /bin/entrypoint.sh
+# Start the agent directly (s6-overlay overwrites /bin/entrypoint.sh)
+exec /opt/datadog-agent/bin/agent/agent run
