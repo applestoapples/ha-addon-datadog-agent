@@ -3,10 +3,11 @@ FROM gcr.io/datadoghq/agent:7 AS agent
 
 FROM ${BUILD_FROM}
 
-# Install jq and systemd library for journald support
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    jq \
-    libsystemd0 \
+# Install dependencies for journald and logs support
+RUN apt-get update && apt-get install -y --no-install-recommends 
+    jq 
+    libsystemd0 
+    systemd 
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the agent from the official image
@@ -19,7 +20,4 @@ ENV PATH="/opt/datadog-agent/bin/agent/:${PATH}"
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
-# Use a wrapper to ensure output goes to PID 1 stdout
-RUN printf '#!/usr/bin/env bash\nexec /run.sh > /proc/1/fd/1 2>&1\n' > /entrypoint.sh && chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/run.sh"]
