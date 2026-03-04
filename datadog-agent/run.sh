@@ -19,17 +19,6 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=debug
 
-echo "STARTUP: Checking journal paths..."
-ls -ld /var/log/journal || echo "/var/log/journal missing"
-ls -ld /run/log/journal || echo "/run/log/journal missing"
-
-# Determine which journal path to use
-JOURNAL_PATH="/var/log/journal"
-if [ -d "/run/log/journal" ]; then
-  JOURNAL_PATH="/run/log/journal"
-fi
-echo "STARTUP: Using JOURNAL_PATH=${JOURNAL_PATH}"
-
 # Create a minimal datadog.yaml
 cat > /etc/datadog-agent/datadog.yaml <<EOF
 api_key: ${DD_API_KEY}
@@ -44,8 +33,15 @@ mkdir -p /etc/datadog-agent/conf.d/journald.d
 cat > /etc/datadog-agent/conf.d/journald.d/conf.yaml <<EOF
 logs:
   - type: journald
-    path: ${JOURNAL_PATH}
+    path: /run/log/journal
 EOF
+
+# Ensure permissions
+chown -R dd-agent:dd-agent /etc/datadog-agent
+chmod -R 755 /etc/datadog-agent
+
+echo "STARTUP: Listing /etc/datadog-agent/conf.d/journald.d/..."
+ls -l /etc/datadog-agent/conf.d/journald.d/
 
 echo "STARTUP: Starting agent..."
 # Start the agent directly
