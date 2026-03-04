@@ -19,4 +19,7 @@ ENV PATH="/opt/datadog-agent/bin/agent/:${PATH}"
 COPY run.sh /run.sh
 RUN chmod +x /run.sh
 
-CMD ["/run.sh"]
+# Use a wrapper to ensure output goes to PID 1 stdout
+RUN printf '#!/usr/bin/env bash\nexec /run.sh > /proc/1/fd/1 2>&1\n' > /entrypoint.sh && chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

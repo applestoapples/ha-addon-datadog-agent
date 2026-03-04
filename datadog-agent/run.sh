@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Redirect everything to the container's stdout (PID 1)
-exec > /proc/1/fd/1 2>&1
-
 # Read add-on options
 DD_API_KEY="$(jq -r '.dd_api_key' /data/options.json)"
 DD_SITE="$(jq -r '.dd_site' /data/options.json)"
@@ -20,7 +17,7 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=debug
 
-echo "STARTUP: Generating configs (running as $(id))..."
+echo "STARTUP: Generating configs (v0.6.8)..."
 
 # Create a minimal datadog.yaml
 cat > /etc/datadog-agent/datadog.yaml <<EOF
