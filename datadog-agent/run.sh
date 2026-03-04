@@ -7,7 +7,7 @@ DD_SITE="$(jq -r '.dd_site' /data/options.json)"
 DD_HOSTNAME="$(jq -r '.dd_hostname' /data/options.json)"
 
 if [ -z "$DD_API_KEY" ]; then
-  echo "ERROR: dd_api_key is required"
+  echo "ERROR: dd_api_key is required" > /proc/1/fd/1
   exit 1
 fi
 
@@ -17,13 +17,14 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=debug
 
-echo "DIAGNOSTIC: Checking for journal in common HAOS locations..."
+echo "DIAGNOSTIC: Starting script (v0.7.3)..." > /proc/1/fd/1
+
+# Find journal path
 for p in /var/log/journal /run/log/journal /host/run/log/journal /host/var/log/journal; do
+  echo "DIAGNOSTIC: Checking ${p}..." > /proc/1/fd/1
   if [ -d "$p" ]; then
-    echo "DIAGNOSTIC: Found directory $p"
-    ls -F "$p"
-    # Check if there are actual journal files (usually in a hex-named subdir)
-    find "$p" -name "*.journal" | head -n 5
+    echo "DIAGNOSTIC: Found ${p}" > /proc/1/fd/1
+    ls -F "$p" > /proc/1/fd/1 || true
     ACTUAL_JOURNAL_PATH="$p"
   fi
 done
@@ -45,7 +46,6 @@ logs:
     path: ${ACTUAL_JOURNAL_PATH:-/var/log/journal}
 EOF
 
-echo "DIAGNOSTIC: Using journal path: ${ACTUAL_JOURNAL_PATH:-/var/log/journal}"
-
+echo "DIAGNOSTIC: Starting agent..." > /proc/1/fd/1
 # Start the agent
 exec /opt/datadog-agent/bin/agent/agent run
