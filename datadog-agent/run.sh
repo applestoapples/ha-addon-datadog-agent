@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-exec 1>&2
+# Redirect everything to the container's stdout (PID 1)
+exec > /proc/1/fd/1 2>&1
 
 # Read add-on options
 DD_API_KEY="$(jq -r '.dd_api_key' /data/options.json)"
@@ -18,6 +19,8 @@ export DD_SITE
 export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=debug
+
+echo "STARTUP: Generating configs..."
 
 # Create a minimal datadog.yaml
 cat > /etc/datadog-agent/datadog.yaml <<EOF
@@ -39,9 +42,6 @@ EOF
 # Ensure permissions
 chown -R dd-agent:dd-agent /etc/datadog-agent
 chmod -R 755 /etc/datadog-agent
-
-echo "STARTUP: Listing /etc/datadog-agent/conf.d/journald.d/..."
-ls -l /etc/datadog-agent/conf.d/journald.d/
 
 echo "STARTUP: Starting agent..."
 # Start the agent directly
