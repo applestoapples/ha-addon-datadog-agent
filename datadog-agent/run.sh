@@ -23,6 +23,9 @@ export DD_LOG_LEVEL=debug
 export DD_APM_ENABLED=false
 export DD_PROCESS_AGENT_ENABLED=false
 
+echo "DEBUG: Environment variables:"
+env | grep DD_ | grep -v API_KEY
+
 # Configure journald log collection
 # HAOS journal is usually at /var/log/journal
 mkdir -p /etc/datadog-agent/conf.d/journald.d
@@ -37,6 +40,12 @@ logs:
     exclude_units:
       - datadog-agent.service
 EOF
+
+echo "DEBUG: Generated journald config:"
+cat /etc/datadog-agent/conf.d/journald.d/conf.yaml
+
+echo "DEBUG: Checking /var/log/journal:"
+ls -ld /var/log/journal || echo "/var/log/journal not found"
 
 # Start the agent directly
 exec /opt/datadog-agent/bin/agent/agent run
