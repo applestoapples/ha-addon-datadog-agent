@@ -1,6 +1,6 @@
 name: Datadog Agent
 description: Run the Datadog Agent on Home Assistant OS to ship logs via journald
-version: "0.7.4"
+version: "0.7.5"
 slug: datadog-agent
 url: https://github.com/applestoapples/ha-addon-datadog-agent
 arch:
@@ -10,6 +10,8 @@ startup: services
 init: false
 journald: true
 host_network: true
+privileged:
+  - SYS_ADMIN
 options:
   dd_api_key: ""
   dd_site: datadoghq.com
