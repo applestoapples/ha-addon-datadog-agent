@@ -20,7 +20,7 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=debug
 
-echo "STARTUP: Generating configs..."
+echo "STARTUP: Generating configs (running as $(id))..."
 
 # Create a minimal datadog.yaml
 cat > /etc/datadog-agent/datadog.yaml <<EOF
@@ -38,10 +38,6 @@ logs:
   - type: journald
     path: /run/log/journal
 EOF
-
-# Ensure permissions
-chown -R dd-agent:dd-agent /etc/datadog-agent
-chmod -R 755 /etc/datadog-agent
 
 echo "STARTUP: Starting agent..."
 # Start the agent directly
