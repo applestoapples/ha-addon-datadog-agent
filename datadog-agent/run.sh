@@ -19,15 +19,20 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=debug
 
-# Disable unnecessary components
-export DD_APM_ENABLED=false
-export DD_PROCESS_AGENT_ENABLED=false
-
-echo "DEBUG: Environment variables:"
-env | grep DD_ | grep -v API_KEY
+# Create a minimal datadog.yaml to ensure logs are enabled and level is debug
+cat > /etc/datadog-agent/datadog.yaml <<EOF
+api_key: ${DD_API_KEY}
+site: ${DD_SITE}
+hostname: ${DD_HOSTNAME}
+logs_enabled: true
+log_level: debug
+apm_config:
+  enabled: false
+process_config:
+  enabled: false
+EOF
 
 # Configure journald log collection
-# HAOS journal is usually at /var/log/journal
 mkdir -p /etc/datadog-agent/conf.d/journald.d
 cat > /etc/datadog-agent/conf.d/journald.d/conf.yaml <<EOF
 logs:
@@ -41,11 +46,9 @@ logs:
       - datadog-agent.service
 EOF
 
-echo "DEBUG: Generated journald config:"
-cat /etc/datadog-agent/conf.d/journald.d/conf.yaml
+echo "STARTUP: Checking /var/log/journal..."
+ls -R /var/log/journal || echo "/var/log/journal not found or inaccessible"
 
-echo "DEBUG: Checking /var/log/journal:"
-ls -ld /var/log/journal || echo "/var/log/journal not found"
-
+echo "STARTUP: Starting agent..."
 # Start the agent directly
 exec /opt/datadog-agent/bin/agent/agent run
