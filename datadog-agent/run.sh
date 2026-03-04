@@ -1,4 +1,5 @@
-#!/usr/bin/env bashio
+#!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
 set -euo pipefail
 
 # Read add-on options
@@ -16,8 +17,9 @@ export DD_SITE
 export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=debug
+export DD_JOURNALD_PATH=/var/log/journal
 
-bashio::log.info "STARTUP: Diagnostic check (v0.7.7)..."
+bashio::log.info "STARTUP: Diagnostic check (v0.7.8)..."
 bashio::log.info "STARTUP: Current user: $(id)"
 
 # Create a minimal datadog.yaml
@@ -36,15 +38,16 @@ mkdir -p /etc/datadog-agent/conf.d/journald.d
 cat > /etc/datadog-agent/conf.d/journald.d/conf.yaml <<EOF
 logs:
   - type: journald
+    path: /var/log/journal
 EOF
 
 # Ensure the agent can read everything
 chmod -R 777 /etc/datadog-agent
 
-bashio::log.info "STARTUP: Checking /var/log/journal..."
+bashio::log.info "STARTUP: Checking /var/log/journal contents..."
 if [ -d "/var/log/journal" ]; then
   bashio::log.info "Found /var/log/journal"
-  ls -F /var/log/journal
+  ls -F /var/log/journal || bashio::log.warn "Could not list /var/log/journal"
 else
   bashio::log.warn "/var/log/journal not found!"
 fi
