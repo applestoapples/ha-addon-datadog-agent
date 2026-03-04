@@ -1,13 +1,13 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bashio
 set -euo pipefail
 
 # Read add-on options
-DD_API_KEY="$(jq -r '.dd_api_key' /data/options.json)"
-DD_SITE="$(jq -r '.dd_site' /data/options.json)"
-DD_HOSTNAME="$(jq -r '.dd_hostname' /data/options.json)"
+DD_API_KEY=$(bashio::config 'dd_api_key')
+DD_SITE=$(bashio::config 'dd_site')
+DD_HOSTNAME=$(bashio::config 'dd_hostname')
 
 if [ -z "$DD_API_KEY" ]; then
-  echo "ERROR: dd_api_key is required"
+  bashio::log.error "dd_api_key is required"
   exit 1
 fi
 
@@ -17,13 +17,11 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=debug
 
-echo "STARTUP: Diagnostic check (v0.7.6)..."
-echo "STARTUP: Current user: $(id)"
-echo "STARTUP: Checking /var/log/journal..."
-ls -ld /var/log/journal || echo "/var/log/journal not found"
-ls -F /var/log/journal || echo "cannot list /var/log/journal"
+bashio::log.info "STARTUP: Diagnostic check (v0.7.7)..."
+bashio::log.info "STARTUP: Current user: $(id)"
 
 # Create a minimal datadog.yaml
+bashio::log.info "STARTUP: Generating datadog.yaml..."
 cat > /etc/datadog-agent/datadog.yaml <<EOF
 api_key: ${DD_API_KEY}
 site: ${DD_SITE}
@@ -33,12 +31,23 @@ log_level: debug
 EOF
 
 # Configure journald log collection
+bashio::log.info "STARTUP: Configuring journald integration..."
 mkdir -p /etc/datadog-agent/conf.d/journald.d
 cat > /etc/datadog-agent/conf.d/journald.d/conf.yaml <<EOF
 logs:
   - type: journald
 EOF
 
-echo "STARTUP: Starting Datadog Agent..."
-sleep 5 # ensure logs are flushed
+# Ensure the agent can read everything
+chmod -R 777 /etc/datadog-agent
+
+bashio::log.info "STARTUP: Checking /var/log/journal..."
+if [ -d "/var/log/journal" ]; then
+  bashio::log.info "Found /var/log/journal"
+  ls -F /var/log/journal
+else
+  bashio::log.warn "/var/log/journal not found!"
+fi
+
+bashio::log.info "STARTUP: Starting Datadog Agent..."
 exec /opt/datadog-agent/bin/agent/agent run
