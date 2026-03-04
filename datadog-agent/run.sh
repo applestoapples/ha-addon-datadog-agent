@@ -25,7 +25,7 @@ mkdir -p /etc/datadog-agent/conf.d/journald.d
 cat > /etc/datadog-agent/conf.d/journald.d/conf.yaml <<EOF
 logs:
   - type: journald
-    path: /var/log/journal
+    path: /run/log/journal
     include_units:
       - hassio-supervisor.service
       - hassos-config.service
