@@ -18,7 +18,7 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=debug
 
-bashio::log.info "Starting Datadog Agent (v0.8.2)..."
+bashio::log.info "Starting Datadog Agent (v0.8.3)..."
 
 # Create datadog.yaml
 cat > /etc/datadog-agent/datadog.yaml <<EOF
@@ -34,6 +34,13 @@ mkdir -p /etc/datadog-agent/conf.d/journald.d
 cat > /etc/datadog-agent/conf.d/journald.d/conf.yaml <<EOF
 logs:
   - type: journald
+    path: /var/log/journal
+    include_units:
+      - hassio-supervisor.service
+      - hassos-config.service
+      - homeassistant.service
+    exclude_units:
+      - datadog-agent.service
 EOF
 
 # Ensure permissions
