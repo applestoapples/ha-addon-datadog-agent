@@ -16,9 +16,9 @@ export DD_API_KEY
 export DD_SITE
 export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
-export DD_LOG_LEVEL=info
+export DD_LOG_LEVEL=debug
 
-bashio::log.info "Starting Datadog Agent (v0.8.1)..."
+bashio::log.info "Starting Datadog Agent (v0.8.2)..."
 
 # Create datadog.yaml
 cat > /etc/datadog-agent/datadog.yaml <<EOF
@@ -26,7 +26,7 @@ api_key: ${DD_API_KEY}
 site: ${DD_SITE}
 hostname: ${DD_HOSTNAME}
 logs_enabled: true
-log_level: info
+log_level: debug
 EOF
 
 # Configure journald log collection
