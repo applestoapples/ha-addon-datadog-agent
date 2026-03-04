@@ -3,10 +3,11 @@ FROM gcr.io/datadoghq/agent:7 AS agent
 
 FROM ${BUILD_FROM}
 
-# Install jq and systemd library for journald support
+# Install dependencies for journald and logs support
 RUN apt-get update && apt-get install -y --no-install-recommends \
     jq \
     libsystemd0 \
+    systemd \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the agent from the official image
