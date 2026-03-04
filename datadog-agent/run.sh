@@ -5,6 +5,7 @@ set -euo pipefail
 DD_API_KEY="$(jq -r '.dd_api_key' /data/options.json)"
 DD_SITE="$(jq -r '.dd_site' /data/options.json)"
 DD_TAGS="$(jq -r '.dd_tags | join(",")' /data/options.json)"
+DD_HOSTNAME="$(jq -r '.dd_hostname' /data/options.json)"
 
 if [ -z "$DD_API_KEY" ]; then
   echo "ERROR: dd_api_key is required" >&2
@@ -14,6 +15,7 @@ fi
 export DD_API_KEY
 export DD_SITE
 export DD_TAGS
+export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 
 # Disable unnecessary components
