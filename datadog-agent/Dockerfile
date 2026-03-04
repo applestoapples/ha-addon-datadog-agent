@@ -1,7 +1,20 @@
-ARG BUILD_FROM=gcr.io/datadoghq/agent:7
+ARG BUILD_FROM
+FROM gcr.io/datadoghq/agent:7 AS agent
+
 FROM ${BUILD_FROM}
 
-RUN apt-get update && apt-get install -y --no-install-recommends jq && rm -rf /var/lib/apt/lists/*
+# Install jq and systemd library for journald support
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    jq \
+    libsystemd0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the agent from the official image
+COPY --from=agent /opt/datadog-agent /opt/datadog-agent
+COPY --from=agent /etc/datadog-agent /etc/datadog-agent
+
+# Set up environment
+ENV PATH="/opt/datadog-agent/bin/agent/:${PATH}"
 
 COPY run.sh /run.sh
 RUN chmod +x /run.sh

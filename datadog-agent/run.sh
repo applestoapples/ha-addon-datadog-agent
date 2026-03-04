@@ -17,23 +17,26 @@ export DD_SITE
 export DD_TAGS
 export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
+export DD_LOG_LEVEL=debug
 
 # Disable unnecessary components
 export DD_APM_ENABLED=false
 export DD_PROCESS_AGENT_ENABLED=false
 
 # Configure journald log collection
+# HAOS journal is usually at /var/log/journal
 mkdir -p /etc/datadog-agent/conf.d/journald.d
 cat > /etc/datadog-agent/conf.d/journald.d/conf.yaml <<EOF
 logs:
   - type: journald
-    path: /run/log/journal
+    path: /var/log/journal
     include_units:
       - hassio-supervisor.service
       - hassos-config.service
+      - homeassistant.service
     exclude_units:
       - datadog-agent.service
 EOF
 
-# Start the agent directly (s6-overlay overwrites /bin/entrypoint.sh)
+# Start the agent directly
 exec /opt/datadog-agent/bin/agent/agent run
