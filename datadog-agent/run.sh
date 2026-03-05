@@ -18,7 +18,7 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=info
 
-bashio::log.info "Starting Datadog Agent (v0.9.0)..."
+bashio::log.info "Starting Datadog Agent (v0.9.1)..."
 
 # Create datadog.yaml
 cat > /etc/datadog-agent/datadog.yaml <<EOF
@@ -29,18 +29,22 @@ logs_enabled: true
 log_level: info
 EOF
 
+# Find the active journal path
+# HAOS uses /run/log/journal for volatile logs (current boot)
+# and /var/log/journal for persistent logs.
+JOURNAL_PATH="/var/log/journal"
+if [ -d "/run/log/journal" ]; then
+    JOURNAL_PATH="/run/log/journal"
+    bashio::log.info "Using volatile journal path: $JOURNAL_PATH"
+fi
+
 # Configure journald log collection
+# We remove unit filters to match ha-addon-syslog behavior (get everything)
 mkdir -p /etc/datadog-agent/conf.d/journald.d
 cat > /etc/datadog-agent/conf.d/journald.d/conf.yaml <<EOF
 logs:
   - type: journald
-    path: /var/log/journal
-    include_units:
-      - hassio-supervisor.service
-      - hassos-config.service
-      - homeassistant.service
-    exclude_units:
-      - datadog-agent.service
+    path: $JOURNAL_PATH
 EOF
 
 # Ensure permissions
