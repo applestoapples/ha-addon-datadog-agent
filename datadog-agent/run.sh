@@ -13,7 +13,7 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=info
 
-bashio::log.info "Starting Datadog Agent (v0.9.4) with advanced parsing..."
+bashio::log.info "Starting Datadog Agent (v0.9.5) with replicated syslog parsing..."
 
 # Create datadog.yaml
 cat > /etc/datadog-agent/datadog.yaml <<EOF
@@ -33,10 +33,8 @@ if [ -d "/run/log/journal" ]; then
     JOURNAL_PATH="/run/log/journal"
 fi
 
-# Configure journald log collection with processing rules
-# Replicating ha-addon-syslog logic:
-# 1. Strip ANSI colors
-# 2. Extract HA log levels from message text
+# Configure journald log collection with advanced processing rules
+# to replicate ha-addon-syslog behavior.
 mkdir -p /etc/datadog-agent/conf.d/journald.d
 cat > /etc/datadog-agent/conf.d/journald.d/conf.yaml <<EOF
 logs:
@@ -44,13 +42,14 @@ logs:
     path: $JOURNAL_PATH
     source: haos
     log_processing_rules:
-      # Strip ANSI color codes
+      # 1. Strip ANSI colors (replicated from journal2syslog.py)
       - type: mask_sequences
         name: strip_colors
         replace_placeholder: ""
         pattern: "(\x1b\[[0-9;]*[mK])"
-      # Replicate HA level parsing: extract level from message
-      # Pattern: ^\S+ \S+ (INFO|WARNING|DEBUG|ERROR|CRITICAL)
+      
+      # 2. Extract Log Level from HA message format
+      # Replicates: PATTERN_LOGLEVEL_HA = re.compile(r"^\S+ \S+ (?P<level>INFO|WARNING|DEBUG|ERROR|CRITICAL) ")
       - type: multi_line
         name: ha_log_level
         pattern: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}'
