@@ -13,10 +13,9 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=info
 
-bashio::log.info "Starting Datadog Agent (v0.9.3)..."
+bashio::log.info "Starting Datadog Agent (v0.9.4) with advanced parsing..."
 
 # Create datadog.yaml
-# We add run_path to /data so offsets persist across restarts
 cat > /etc/datadog-agent/datadog.yaml <<EOF
 api_key: ${DD_API_KEY}
 site: ${DD_SITE}
@@ -28,13 +27,33 @@ logs_config:
   run_path: /data/logs-agent
 EOF
 
-# Configure journald log collection
+# Find actual journal path
+JOURNAL_PATH="/var/log/journal"
+if [ -d "/run/log/journal" ]; then
+    JOURNAL_PATH="/run/log/journal"
+fi
+
+# Configure journald log collection with processing rules
+# Replicating ha-addon-syslog logic:
+# 1. Strip ANSI colors
+# 2. Extract HA log levels from message text
 mkdir -p /etc/datadog-agent/conf.d/journald.d
 cat > /etc/datadog-agent/conf.d/journald.d/conf.yaml <<EOF
 logs:
   - type: journald
-    path: /var/log/journal
+    path: $JOURNAL_PATH
     source: haos
+    log_processing_rules:
+      # Strip ANSI color codes
+      - type: mask_sequences
+        name: strip_colors
+        replace_placeholder: ""
+        pattern: "(\x1b\[[0-9;]*[mK])"
+      # Replicate HA level parsing: extract level from message
+      # Pattern: ^\S+ \S+ (INFO|WARNING|DEBUG|ERROR|CRITICAL)
+      - type: multi_line
+        name: ha_log_level
+        pattern: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}'
 EOF
 
 # Ensure permissions
