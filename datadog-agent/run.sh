@@ -13,7 +13,7 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=info
 
-bashio::log.info "Starting Datadog Agent (v0.9.6) with enhanced metadata remapping..."
+bashio::log.info "Starting Datadog Agent (v0.9.7) with multiline aggregation..."
 
 # Create datadog.yaml
 cat > /etc/datadog-agent/datadog.yaml <<EOF
@@ -33,8 +33,7 @@ if [ -d "/run/log/journal" ]; then
     JOURNAL_PATH="/run/log/journal"
 fi
 
-# Configure journald log collection with advanced processing rules
-# to replicate ha-addon-syslog behavior.
+# Configure journald log collection
 mkdir -p /etc/datadog-agent/conf.d/journald.d
 cat > /etc/datadog-agent/conf.d/journald.d/conf.yaml <<EOF
 logs:
@@ -42,17 +41,17 @@ logs:
     path: $JOURNAL_PATH
     source: haos
     log_processing_rules:
-      # 1. Strip ANSI colors
+      # 1. Multiline Aggregation
+      # Matches the start of a new log entry (Timestamp or [bracket)
+      - type: multi_line
+        name: ha_multiline_merge
+        pattern: '^\d{4}-\d{2}-\d{2}|^\['
+      
+      # 2. Strip ANSI colors
       - type: mask_sequences
         name: strip_colors
         replace_placeholder: ""
         pattern: "(\x1b\[[0-9;]*[mK])"
-      
-      # 2. Extract Log Level from HA message format
-      # Pattern: ^\S+ \S+ (INFO|WARNING|DEBUG|ERROR|CRITICAL)
-      - type: multi_line
-        name: ha_log_level
-        pattern: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}'
 EOF
 
 # Ensure permissions
