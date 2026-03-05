@@ -13,7 +13,7 @@ export DD_HOSTNAME
 export DD_LOGS_ENABLED=true
 export DD_LOG_LEVEL=info
 
-bashio::log.info "Starting Datadog Agent (v0.9.5) with replicated syslog parsing..."
+bashio::log.info "Starting Datadog Agent (v0.9.6) with enhanced metadata remapping..."
 
 # Create datadog.yaml
 cat > /etc/datadog-agent/datadog.yaml <<EOF
@@ -42,14 +42,14 @@ logs:
     path: $JOURNAL_PATH
     source: haos
     log_processing_rules:
-      # 1. Strip ANSI colors (replicated from journal2syslog.py)
+      # 1. Strip ANSI colors
       - type: mask_sequences
         name: strip_colors
         replace_placeholder: ""
         pattern: "(\x1b\[[0-9;]*[mK])"
       
       # 2. Extract Log Level from HA message format
-      # Replicates: PATTERN_LOGLEVEL_HA = re.compile(r"^\S+ \S+ (?P<level>INFO|WARNING|DEBUG|ERROR|CRITICAL) ")
+      # Pattern: ^\S+ \S+ (INFO|WARNING|DEBUG|ERROR|CRITICAL)
       - type: multi_line
         name: ha_log_level
         pattern: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}'
